@@ -1,37 +1,61 @@
 package com.backflip.backflip_android_webview.backflip;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.util.Log;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
 
+    private WebView web;
+
+    private final String localhostProtocol = "http://";
+    private final String localhostUrl = "192.168.1.137";
+    private final String localhostPort = ":3000";
+    private final String fullLocalhostUrl = localhostProtocol + localhostUrl + localhostPort;
+
+    public static Context context;
+
+    private final WebViewClient webClient = new WebViewClient() {
+
+      @Override
+      public boolean shouldOverrideUrlLoading( WebView view, String url ) {
+        Log.d("Backflip", url);
+
+        if ( Uri.parse(url).getHost().equals(localhostUrl) ) {
+          return false;
+        }
+
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        startActivity(intent);
+        return true;
+      }
+    };
+
+
+    @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        MainActivity.context = getApplicationContext();
+
         setContentView(R.layout.activity_main);
-    }
 
+        web = (WebView)findViewById(R.id.web);
+        web.getSettings().setJavaScriptEnabled(true);
+        web.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+        web.getSettings().setDomStorageEnabled(true);
+        web.getSettings().setAllowFileAccess(true);
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
+        web.setWebViewClient(webClient);
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+       web.loadUrl(fullLocalhostUrl);
     }
 
 }
