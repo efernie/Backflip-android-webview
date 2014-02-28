@@ -7,12 +7,19 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.webkit.ConsoleMessage;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
 
     private WebView web;
+
+    // Logging
+    private Boolean VERBOSE = true;
+    private String TAG = "Backflip";
 
     private final String localhostProtocol = "http://";
     private final String localhostUrl = "192.168.1.137";
@@ -25,7 +32,6 @@ public class MainActivity extends Activity {
 
       @Override
       public boolean shouldOverrideUrlLoading( WebView view, String url ) {
-        Log.d("Backflip", url);
 
         if ( Uri.parse(url).getHost().equals(localhostUrl) ) {
           return false;
@@ -53,9 +59,33 @@ public class MainActivity extends Activity {
         web.getSettings().setDomStorageEnabled(true);
         web.getSettings().setAllowFileAccess(true);
 
+        web.addJavascriptInterface(new BackflipJavascriptInterface(this), "Android");
         web.setWebViewClient(webClient);
 
        web.loadUrl(fullLocalhostUrl);
+
+      // To catch the console logs and display them in the logcat
+      web.setWebChromeClient(new WebChromeClient() {
+        public boolean onConsoleMessage(ConsoleMessage cm) {
+          if (VERBOSE) Log.d(TAG, cm.message() + " -- From line "
+            + cm.lineNumber() + " of "
+            + cm.sourceId() );
+          return true;
+        }
+      });
     }
 
+    public class BackflipJavascriptInterface {
+      final Context mContext;
+
+      BackflipJavascriptInterface(Context c) {
+        mContext = c;
+      }
+
+      @JavascriptInterface
+      // TODO: add code to take picture and return it to the webapp
+      public void takePicture () {
+
+      }
+    }
 }
